@@ -10,15 +10,19 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--create", help="флаг для создания нового файла", action="store_true")
     parser.add_argument("-r", "--read_only", help="флаг только для чтения", action="store_true")
     parser.add_argument("-b", "--base", help="основание системы счисления(2, 8, 10, default=16)", type=int, default=16)
+    parser.add_argument("-n", "--number",
+                        help="колличество колонок, изначально равно основанию системы счисления", type=int, default=0)
     parser.add_argument("FILE_NAME", help="название файла")
     args = parser.parse_args()
     create = args.create
     read_only = args.read_only
     filename = args.FILE_NAME
-    columns = args.base
-    if columns not in {2, 8, 10, 16}:
+    base = args.base
+    if base not in {2, 8, 10, 16}:
         print("неподдерживаемая система счисления")
         sys.exit()
+    columns = args.number
+    columns = base if columns == 0 else columns
     app: Application = Application()
-    app.set_main_window(PyHex(create, read_only, filename, columns, app.stdscr, app))
+    app.set_main_window(PyHex(create, read_only, filename, base, columns, app.stdscr, app))
     app.run()

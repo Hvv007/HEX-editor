@@ -7,11 +7,13 @@ from src.HexFile import HexFile
 
 
 class PyHex(Window):
-    def __init__(self, create, read_only, filename, columns, *args, **kwargs):
+    def __init__(self, create, read_only, filename, base, columns, *args, **kwargs):
         super(__class__, self).__init__(*args, **kwargs)
         self.init_colors()
         self.set_cursor_state(0)
         self.columns = columns
+        self.base = base
+        self.offset_base = 0 if base == 16 else 7 if base == 2 else 1
         self.last_line = curses.LINES - 2
         self.create = create
         self.insert_delete_mode = False
@@ -31,7 +33,7 @@ class PyHex(Window):
         self.right_scroll = 1
 
         self.edit_keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"]
-        for i, key in enumerate(self.edit_keys[:self.columns]):
+        for i, key in enumerate(self.edit_keys[:self.base]):
             self.edit_keys[i] = ord(str(key))
 
         self.edited_position = 0  # Начальная позиция в байте при изменении: 0 - левая, 1 - правая
@@ -61,7 +63,7 @@ class PyHex(Window):
         if self.create:
             file = open(self.filename, "w")
             file.close()
-        self.file = HexFile(self.filename, self.columns)
+        self.file = HexFile(self.filename, self.base)
         self.file.start()
         self._status_bar_text = "{}".format(os.path.basename(self.filename))
         self.status_bar_text = ""
@@ -127,9 +129,9 @@ class PyHex(Window):
                 self.delete(self.cursor_y, self.cursor_x)
             else:
                 self.clear_edit()
-        if self.key_pressed == 26:  # Ctrl + Z
+        if self.key_pressed == ord("z"):
             self.undo()
-        if self.key_pressed == 24:  # Ctrl + X
+        if self.key_pressed == ord("x"):
             self.redo()
 
     def undo(self):
@@ -191,7 +193,7 @@ class PyHex(Window):
             hex_ch = hex(i).replace("x", "").upper()
             if i >= 16:
                 hex_ch = hex_ch.lstrip("0")
-            self.encoded_title += hex_ch + " "
+            self.encoded_title += hex_ch + " " + " " * self.offset_base
 
         self.decoded_title_x = self.encoded_title_x + len(self.encoded_title) + 2
         self.decoded_text_x = self.decoded_title_x
@@ -232,18 +234,19 @@ class PyHex(Window):
 
     def draw_ornament(self):
         self.draw_text(self.offset_text_y, self.offset_text_x - 1,
-                       "┌" + "─" * (self.offset_len + (self.columns * 4 + 5)) + "┐", 1)
+                       "┌" + "─" * (self.offset_len + (self.columns * (4 + self.offset_base) + 5)) + "┐", 1)
         self.draw_text(self.offset_text_y, self.encoded_text_x - 2, "┬", 1)
         self.draw_text(self.offset_text_y, self.decoded_text_x - 2, "┬", 1)
 
         self.draw_text(self.last_line, self.offset_text_x - 1,
-                       "└" + "─" * (self.offset_len + (self.columns * 4 + 5)) + "┘", 1)
+                       "└" + "─" * (self.offset_len + (self.columns * (4 + self.offset_base) + 5)) + "┘", 1)
         self.draw_text(self.last_line, self.decoded_text_x - 2, "┴", 1)
         self.draw_text(self.last_line, self.encoded_text_x - 2, "┴", 1)
 
         for i in range(self.offset_text_y + 1, self.last_line):
             self.draw_text(i, self.offset_text_x - 1, "│" + " " * (self.offset_len + 1) +
-                           "│" + " " * (self.columns * 3 + 1) + "│" + " " * (self.columns + 1) + "│", 1)
+                           "│" + " " * (self.columns * (3 + self.offset_base) + 1) +
+                           "│" + " " * (self.columns + 1) + "│", 1)
 
     def draw_titles(self):
         self.draw_text(self.title_y, self.title_x, self.title, 2)
@@ -273,13 +276,17 @@ class PyHex(Window):
                 normal_color = 3
 
             if (self.edit_lines[i][0] != "-") and (self.edit_lines[i][1] != "-"):
-                self.draw_text(y_coord + y_offset, x_coord + x_offset, self.edit_lines[i], edited_color)
+                self.draw_text(y_coord + y_offset, x_coord + x_offset + self.offset_base * x,
+                               self.edit_lines[i], edited_color)
             elif self.edit_lines[i][1] != "-":
-                self.draw_text(y_coord + y_offset, x_coord + x_offset, self.edit_lines[i][1] + byte[0], edited_color)
+                self.draw_text(y_coord + y_offset, x_coord + x_offset + self.offset_base * x,
+                               self.edit_lines[i][1] + byte[0], edited_color)
             elif self.edit_lines[i][0] != "-":
-                self.draw_text(y_coord + y_offset, x_coord + x_offset, self.edit_lines[i][0] + byte[1], edited_color)
+                self.draw_text(y_coord + y_offset, x_coord + x_offset + self.offset_base * x,
+                               self.edit_lines[i][0] + byte[1], edited_color)
             elif self.edit_lines[i] == "--":
-                self.draw_text(y_coord + y_offset, x_coord + x_offset, byte, normal_color)
+                self.draw_text(y_coord + y_offset, x_coord + x_offset + self.offset_base * x,
+                               byte, normal_color)
 
     def draw_decoded(self):
         x_coord = self.decoded_text_x
