@@ -234,19 +234,19 @@ class PyHex(Window):
 
     def draw_ornament(self):
         self.draw_text(self.offset_text_y, self.offset_text_x - 1,
-                       "┌" + "─" * (self.offset_len + (self.columns * (4 + self.offset_base) + 5)) + "┐", 1)
+                       "┌" + "─" * (self.offset_len + (self.columns * (4 + self.offset_base) + 6)) + "┐", 1)
         self.draw_text(self.offset_text_y, self.encoded_text_x - 2, "┬", 1)
         self.draw_text(self.offset_text_y, self.decoded_text_x - 2, "┬", 1)
 
         self.draw_text(self.last_line, self.offset_text_x - 1,
-                       "└" + "─" * (self.offset_len + (self.columns * (4 + self.offset_base) + 5)) + "┘", 1)
+                       "└" + "─" * (self.offset_len + (self.columns * (4 + self.offset_base) + 6)) + "┘", 1)
         self.draw_text(self.last_line, self.decoded_text_x - 2, "┴", 1)
         self.draw_text(self.last_line, self.encoded_text_x - 2, "┴", 1)
 
         for i in range(self.offset_text_y + 1, self.last_line):
             self.draw_text(i, self.offset_text_x - 1, "│" + " " * (self.offset_len + 1) +
                            "│" + " " * (self.columns * (3 + self.offset_base) + 1) +
-                           "│" + " " * (self.columns + 1) + "│", 1)
+                           "│" + " " * (self.columns + 2) + "│", 1)
 
     def draw_titles(self):
         self.draw_text(self.title_y, self.title_x, self.title, 2)
