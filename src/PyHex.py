@@ -13,7 +13,7 @@ class PyHex(Window):
         self.set_cursor_state(0)
         self.columns = columns
         self.base = base
-        self.offset_base = 0 if base == 16 else 7 if base == 2 else 1
+        self.offset_base = 0 if base == 16 else 6 if base == 2 else 1
         self.last_line = curses.LINES - 2
         self.create = create
         self.insert_delete_mode = False
